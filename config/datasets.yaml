@@ -1,0 +1,64 @@
+# Datasets ingested from the Eurostat SDMX 2.1 dissemination API.
+#
+# The `key` is an SDMX series key: dimension values in the dataset's dimension
+# order, separated by dots; `+` means OR. Filtering in the key (instead of in
+# query parameters) is what keeps downloads small: the SDMX 2.1 endpoint IGNORES
+# unknown query parameters such as `geo=PT`, so a filter there silently
+# downloads the whole dataset. `{geo}` is replaced by the `geos` list below.
+#
+# Verified against the live API on 2026-10-28 (see docs/adr/0004-hicp-coicop2018.md).
+
+base_url: https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data
+
+# EU-27 member states (Eurostat codes: Greece is EL, not GR) + the EU-27 aggregate.
+geos:
+  - AT
+  - BE
+  - BG
+  - CY
+  - CZ
+  - DE
+  - DK
+  - EE
+  - EL
+  - ES
+  - FI
+  - FR
+  - HR
+  - HU
+  - IE
+  - IT
+  - LT
+  - LU
+  - LV
+  - MT
+  - NL
+  - PL
+  - PT
+  - RO
+  - SE
+  - SI
+  - SK
+  - EU27_2020
+
+datasets:
+  prc_hicp_minr:
+    description: HICP (COICOP 2018) - monthly data, annual rate of change, all items
+    # dimensions: freq.unit.coicop18.geo
+    key: "M.RCH_A.TOTAL.{geo}"
+    start_period: "2019-01"
+    frequency: monthly
+
+  une_rt_m:
+    description: Unemployment rate, seasonally adjusted, total, % of active population
+    # dimensions: freq.s_adj.age.unit.sex.geo
+    key: "M.SA.TOTAL.PC_ACT.T.{geo}"
+    start_period: "2019-01"
+    frequency: monthly
+
+  nrg_pc_204:
+    description: Household electricity price, band DC (2500-4999 kWh), all taxes, EUR/kWh
+    # dimensions: freq.siec.nrg_cons.unit.tax.currency.geo
+    key: "S.E7000.KWH2500-4999.KWH.I_TAX.EUR.{geo}"
+    start_period: "2019-S1"
+    frequency: semiannual

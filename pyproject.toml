@@ -1,0 +1,71 @@
+[project]
+name = "europulse"
+version = "0.1.0"
+description = "End-to-end data pipeline for EU cost-of-living indicators from Eurostat open data."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "Gabriel Vaz Franco" }]
+# Core runtime shared by every layer (ingestion, warehouse access, settings).
+dependencies = [
+    "duckdb>=1.3",
+    "pyarrow>=18",
+    "pandas>=2.2",
+    "httpx>=0.28",
+    "tenacity>=9.0",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "pyyaml>=6.0",
+]
+
+[dependency-groups]
+# Transformation layer (dbt Core + DuckDB adapter).
+transform = ["dbt-core>=1.10", "dbt-duckdb>=1.9"]
+# Consumption layers.
+api = ["fastapi>=0.115", "uvicorn[standard]>=0.32"]
+dashboard = ["streamlit>=1.40", "plotly>=5.24"]
+# AI layer: SQL parsing/validation + LLM providers (all optional at runtime).
+ai = ["sqlglot>=25", "openai>=1.50", "anthropic>=0.40"]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "respx>=0.21",
+    "ruff>=0.8",
+    "pre-commit>=4.0",
+    "httpx>=0.28",
+    { include-group = "transform" },
+    { include-group = "api" },
+    { include-group = "dashboard" },
+    { include-group = "ai" },
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["common*", "ingestion*", "api*", "ai*"]
+exclude = ["*.tests*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["transform/target", "transform/dbt_packages", "data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "S", "RUF"]
+ignore = ["S101"]  # assert is fine in tests
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["ingestion/tests", "api/tests", "ai/tests", "common/tests", "orchestration/tests", "dashboard/tests"]
+addopts = "-q"
+markers = [
+    "live: hits the real Eurostat API (skipped unless EUROPULSE_LIVE_TESTS=1)",
+    "airflow: needs apache-airflow installed (runs in the DAG-integrity CI job)",
+]
